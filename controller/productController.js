@@ -66,10 +66,33 @@ const getProductById = async (req, res) => {
   }
 };
 
+//similar product suggestion
+const suggestSimilarProducts = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId).populate("category");
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Find similar products based on category and tags
+    const similarProducts = await Product.find({
+      _id: { $ne: productId },
+      $or: [{ category: product.category._id }, { tag: product.tag }],
+    }).limit(10);
+
+    res.status(200).json(similarProducts);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createProduct,
   deleteProduct,
   getAllProducts,
   getProductById,
   updateProduct,
+  suggestSimilarProducts,
 };
